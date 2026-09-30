@@ -1,35 +1,54 @@
-async function loadProjects() {
-  const container = document.getElementById("project-list");
+const products = [
+    { id: 1, name: 'Wireless Headphones', category: 'electronics', price: 2999, img: '🎧' },
+    { id: 2, name: 'Smart Watch', category: 'electronics', price: 4999, img: '⌚' },
+    { id: 3, name: 'Casual Denim Jacket', category: 'fashion', price: 1999, img: '🧥' },
+    { id: 4, name: 'Running Sneakers', category: 'fashion', price: 2499, img: '👟' }
+];
 
-  try {
-    const response = await fetch("/api/projects");
-    const projects = await response.json();
+let cartCount = 0;
 
-    container.innerHTML = projects.map(project => `
-      <article class="project-card">
-        <h3>${escapeHtml(project.title)}</h3>
-        <p>${escapeHtml(project.description)}</p>
-        <p class="tech">${escapeHtml(project.tech)}</p>
-        <a class="btn" href="${escapeAttr(project.link)}" target="_blank">View Project</a>
-      </article>
-    `).join("");
-  } catch (error) {
-    container.innerHTML = "<p>Unable to load projects.</p>";
-  }
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const productsGrid = document.getElementById('products-grid');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const cartCountEl = document.getElementById('cart-count');
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[char]));
-}
+    function renderProducts(categoryFilter = 'all') {
+        productsGrid.innerHTML = '';
+        const filtered = categoryFilter === 'all' 
+            ? products 
+            : products.filter(p => p.category === categoryFilter);
 
-function escapeAttr(value) {
-  return escapeHtml(value);
-}
+        filtered.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.innerHTML = `
+                <div class="product-img">${product.img}</div>
+                <h3>${product.name}</h3>
+                <p class="price">₹${product.price}</p>
+                <button class="add-to-cart-btn" data-id="${product.id}">Add to Cart</button>
+            `;
+            productsGrid.appendChild(card);
+        });
+    }
 
-loadProjects();
+    productsGrid.addEventListener('click', (e) => {
+        if (e.target.classList.contains('add-to-cart-btn')) {
+            cartCount++;
+            cartCountEl.textContent = cartCount;
+            e.target.textContent = 'Added ✓';
+            setTimeout(() => {
+                e.target.textContent = 'Add to Cart';
+            }, 1000);
+        }
+    });
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProducts(btn.dataset.category);
+        });
+    });
+
+    renderProducts();
+});
